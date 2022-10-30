@@ -22,9 +22,9 @@ class SearchBasedTest(unittest.TestCase):
         self.swarmsize = 5
         self.maxiter = 3
         self.samples = 2
-        self.delta = 0.01
-        self.mutation_prob = 0.1
-        self.max_tolerance = 0.2 
+        self.delta = 0.05
+        self.mutation_prob = 0.2
+        self.max_tolerance = 0.1
 
     def test_robustness_against_white_noise(self):
         def _fitness(Delta, *args):
@@ -32,17 +32,16 @@ class SearchBasedTest(unittest.TestCase):
             batch_size = batch.inputs.shape[0]
             synth_inputs = batch.inputs + np.tile(Delta.reshape(batch.inputs.shape[1:]), (batch_size,1,1,1)) 
             synth_preds, synth_probas = model_under_test.predict(synth_inputs)
-            failure_rates.append((orig_preds != synth_preds).mean())
+            failure_rates.append((batch.predictions != synth_preds).mean())
             js_dists = distance.jensenshannon(p=batch.probabilities, q=synth_probas, axis=1)
             fitness = np.mean(np.nan_to_num(js_dists))
             return -fitness
         failure_rates = []
         for _ in range(self.samples):
             batch = random.choice(self.base_test_data)
-            orig_preds, orig_probas = self.model_under_test.predict(batch.inputs)
             shape = batch.inputs[0].shape
             mask = np.random.binomial(1, self.mutation_prob, size=np.prod(shape))
-            lb =  -self.delta * mask 
+            lb = -self.delta * mask
             ub = self.delta * mask + 1e-8
             args = (self.model_under_test, batch, failure_rates)
             xopt, fopt = pso(_fitness, lb, ub, swarmsize=self.swarmsize, maxiter=self.maxiter, args=args)
@@ -58,6 +57,6 @@ class SearchBasedTest(unittest.TestCase):
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        RandomTest.DATA_PATH = sys.argv.pop()
-        RandomTest.MODEL_PATH = sys.argv.pop()
+        SearchBasedTest.DATA_PATH = sys.argv.pop()
+        SearchBasedTest.MODEL_PATH = sys.argv.pop()
     unittest.main()
