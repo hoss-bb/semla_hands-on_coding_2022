@@ -20,7 +20,7 @@ Run the following:
 python tests/random_testing.py
 python tests/search_based_testing.py
 ```
-### 2. Practice the test development
+### 3. Practice the test development
 
 The objective is to implement a metamorphic unit testing for Deep Neural Networks (DNNs) applied in computer vision. The task is to add unit tests to validate the robustness of the EffNet model against image transformations
 
